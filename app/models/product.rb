@@ -2,25 +2,19 @@ class Product < ActiveRecord::Base
     has_many :reviews
     has_many :users, through: :reviews
     
-    def reviews
-      Review.where(product_id: self.id)
+    def leave_review(user,star_rating,comment)
+        Review.create(star_rating: star_rating, comment: comment, product_id: self.id , user_id:user.id)
     end
-    
-    def users
-      User.joins(:reviews).where(reviews: {product_id: self.id})
-    end
-    
-    def leave_review(user, star_rating, comment)
-      Review.create(user: user, product: self, star_rating: star_rating, comment: comment)
-    end
-    
+
     def print_all_reviews
-      self.reviews.each do |review|
-        review.print_review
-      end
+        self.reviews.map do |review|
+            puts <<-PRODUCT
+            Review for #{self.name} 
+            by #{self.users.find(review.user_id).name}: #{review.star_rating}. 
+            #{review.comment}
+                PRODUCT
+        end
+      average_rating =self.reviews.pluck(:star_rating).sum / self.reviews.count.to_f
+      average_rating
     end
-    
-    def average_rating
-      self.reviews.average(:star_rating).to_f
-    end
-  end
+end
